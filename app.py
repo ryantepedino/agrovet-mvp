@@ -118,3 +118,48 @@ if enviar:
 
     except Exception as e:
         st.error(f"❌ Erro ao calcular métricas: {e}")
+        # ===============================
+        # EXPORTAR RELATÓRIO
+        # ===============================
+        st.subheader("📤 Exportar Relatório")
+
+        # Exportar para Excel
+        excel_file = f"Relatorio_{fazenda}_{data_medicao}.xlsx"
+        resumo.to_excel(excel_file, index=False)
+
+        with open(excel_file, "rb") as f:
+            st.download_button(
+                label="⬇️ Baixar Relatório em Excel (.xlsx)",
+                data=f,
+                file_name=excel_file,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
+
+        # Exportar para PDF
+        import tempfile
+        from fpdf import FPDF
+
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", "B", 16)
+        pdf.cell(200, 10, txt="Relatório AgroVet Metrics", ln=True, align="C")
+
+        pdf.set_font("Arial", size=12)
+        pdf.ln(10)
+        pdf.cell(200, 10, txt=f"Fazenda: {fazenda}", ln=True)
+        pdf.cell(200, 10, txt=f"Data: {data_medicao}", ln=True)
+        pdf.ln(5)
+
+        for coluna, valor in resumo.iloc[0].items():
+            pdf.cell(200, 8, txt=f"{coluna}: {valor}", ln=True)
+
+        pdf_path = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
+        pdf.output(pdf_path)
+
+        with open(pdf_path, "rb") as f:
+            st.download_button(
+                label="📄 Baixar Relatório em PDF (.pdf)",
+                data=f,
+                file_name=f"Relatorio_{fazenda}_{data_medicao}.pdf",
+                mime="application/pdf"
+            )
